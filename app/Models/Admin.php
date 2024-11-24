@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Filament\Models\Contracts\FilamentUser;
+use App\Models\Notification;
 
 class Admin extends Authenticatable implements FilamentUser
 {
@@ -43,4 +44,10 @@ class Admin extends Authenticatable implements FilamentUser
         // For now, allow all admins to access Filament. Add logic if needed.
         return true;
     }
+
+    public function notifications()
+    {
+        return $this->morphMany(\Illuminate\Notifications\DatabaseNotification::class, 'notifiable');
+    }
+    
 }

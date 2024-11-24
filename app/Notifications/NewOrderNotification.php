@@ -16,20 +16,21 @@ class NewOrderNotification extends Notification
         $this->order = $order;
     }
 
+    // Define notification delivery channels
     public function via($notifiable)
     {
-        return ['mail'];
+        return ['database']; // Persist the notification in the database
     }
 
-    public function toMail($notifiable)
+    // Define the data stored in the database
+    public function toDatabase($notifiable)
     {
-        return (new \Illuminate\Notifications\Messages\MailMessage)
-            ->subject('New Order Created')
-            ->greeting('Hello Admin,')
-            ->line('A new order has been created by user: ' . $this->order->user->name)
-            ->line('Order ID: ' . $this->order->id)
-            ->line('Pickup Time: ' . $this->order->pickup_time)
-            ->action('View Orders', url('/admin/orders'))
-            ->line('Thank you for using our application!');
+        return [
+            'order_id' => $this->order->id,
+            'user_name' => $this->order->user->name,
+            'pickup_time' => $this->order->pickup_time,
+            'delivery_time' => $this->order->delivery_time,
+            'location' => $this->order->location,
+        ];
     }
 }
