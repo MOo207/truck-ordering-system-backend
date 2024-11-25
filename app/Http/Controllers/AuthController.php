@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use Log;
 
 class AuthController extends Controller
 {
@@ -34,6 +35,9 @@ class AuthController extends Controller
     
             return response()->json(['token' => $token, 'user' => $user], 201);
         } catch (\Exception $e) {
+            \Log::error('Error creating user: ' . $e->getMessage(), [
+                'line' => $e->getLine(),
+            ]);
             return response()->json([
                 'message' => 'An error occurred during registration.',
                 'error' => $e->getMessage()
@@ -51,19 +55,28 @@ class AuthController extends Controller
         ]);
     
         // Check if the user exists
-        $user = \App\Models\User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
     
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
     
-        // Create a Passport token for the user
-        $token = $user->createToken('UserToken')->accessToken;
-    
-        return response()->json(['token' => $token, 'user' => $user], 200);
+        try{
+            // Create a Passport token for the user
+            $token = $user->createToken('UserToken')->accessToken;
+            return response()->json(['token' => $token, 'user' => $user], 200);
+        } catch (\Exception $e) {
+            \Log::error('Error creating token: ' . $e->getMessage(), [
+                'line' => $e->getLine(),
+                ]);
+            return response()->json([
+                'message' => 'An error occurred during login.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-// Return the authenticated user's details
+    // Return the authenticated user's details
     public function user(Request $request)
     {
         try {

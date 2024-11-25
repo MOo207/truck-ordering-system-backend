@@ -28,26 +28,12 @@ class OrderController extends Controller
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
 
-            // return response()->json([
-            //     'message' => 'Order created successfully.',
-            //     'order' => $validated,
-            // ], 201);
     
             // Create the order
             $order = Order::create(array_merge($validated, [
                 'user_id' => $userId,
             ]));
     
-            // // Notify all admins
-            // $admins = Admin::all();
-            // if ($admins->isEmpty()) {
-            //     \Log::warning('No admins found to notify about new orders.');
-            // } else {
-            //     foreach ($admins as $admin) {
-            //         // Notify the admin toDatabase
-            //         $admin->notify(new NewOrderNotification($order));
-            //     }
-            // }
     
             return response()->json([
                 'message' => 'Order created successfully.',
@@ -63,46 +49,136 @@ class OrderController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            // return line
             return response()->json([
                 'message' => 'An unexpected error occurred.',
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'line' => $e->getLine(),
             ], 500);
-    
-            // return response()->json([
-            //     'message' => 'An unexpected error occurred.',
-            //     'error' => $e->getMessage(),
-            // ], 500);
         }
     }
     
 
 
     // Retrieve all orders for the authenticated user
-public function index(Request $request)
-{
-    try {
-        $orders = Order::where('user_id', auth()->id())->get();
+    public function index(Request $request)
+    {
+        try {
+            $orders = Order::where('user_id', auth()->id())->get();
 
-        if ($orders->isEmpty()) {
+            if ($orders->isEmpty()) {
+                return response()->json([
+                    'message' => 'No orders found for the authenticated user',
+                    'orders' => [],
+                ], 200);
+            }
+
             return response()->json([
-                'message' => 'No orders found for the authenticated user',
-                'orders' => [],
+                'message' => 'Orders retrieved successfully!',
+                'orders' => $orders,
             ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while fetching the orders',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'message' => 'Orders retrieved successfully!',
-            'orders' => $orders,
-        ], 200);
-    } catch (\Exception $e) {
-        return response()->json([
-            'message' => 'An error occurred while fetching the orders',
-            'error' => $e->getMessage(),
-        ], 500);
     }
-}
+    // Retrieve a specific order
+    public function show($id)
+    {
+        try {
+            $order = Order::where('id', $id)
+                ->where('user_id', auth()->id())
+                ->first();
 
+            if (!$order) {
+                return response()->json(['message' => 'Order not found or unauthorized.'], 404);
+            }
+
+            return response()->json([
+                'message' => 'Order retrieved successfully!',
+                'order' => $order,
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Error retrieving order: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'An error occurred while retrieving the order.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // Update a specific order
+    public function update(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'location' => 'nullable|string|max:255',
+                'size' => 'nullable|string|max:50',
+                'weight' => 'nullable|numeric|min:0',
+                'pickup_time' => 'nullable|date|after_or_equal:today',
+                'delivery_time' => 'nullable|date|after:pickup_time',
+            ]);
+
+            $order = Order::where('id', $id)
+                ->where('user_id', auth()->id())
+                ->first();
+
+            if (!$order) {
+                return response()->json(['message' => 'Order not found or unauthorized.'], 404);
+            }
+
+            $order->update($validated);
+
+            return response()->json([
+                'message' => 'Order updated successfully.',
+                'order' => $order,
+            ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error updating order: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'An unexpected error occurred.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // Delete a specific order
+    public function destroy($id)
+    {
+        try {
+            $order = Order::where('id', $id)
+                ->where('user_id', auth()->id())
+                ->first();
+
+            if (!$order) {
+                return response()->json(['message' => 'Order not found or unauthorized.'], 404);
+            }
+
+            $order->delete();
+
+            return response()->json([
+                'message' => 'Order deleted successfully.',
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting order: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'An unexpected error occurred.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
