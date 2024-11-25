@@ -27,21 +27,27 @@ class OrderController extends Controller
             if (!$userId) {
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
+
+            // return response()->json([
+            //     'message' => 'Order created successfully.',
+            //     'order' => $validated,
+            // ], 201);
     
             // Create the order
             $order = Order::create(array_merge($validated, [
                 'user_id' => $userId,
             ]));
     
-            // Notify all admins
-            $admins = Admin::all();
-            if ($admins->isEmpty()) {
-                \Log::warning('No admins found to notify about new orders.');
-            } else {
-                foreach ($admins as $admin) {
-                    $admin->notify(new NewOrderNotification($order));
-                }
-            }
+            // // Notify all admins
+            // $admins = Admin::all();
+            // if ($admins->isEmpty()) {
+            //     \Log::warning('No admins found to notify about new orders.');
+            // } else {
+            //     foreach ($admins as $admin) {
+            //         // Notify the admin toDatabase
+            //         $admin->notify(new NewOrderNotification($order));
+            //     }
+            // }
     
             return response()->json([
                 'message' => 'Order created successfully.',

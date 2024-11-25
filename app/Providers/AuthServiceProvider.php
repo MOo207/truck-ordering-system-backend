@@ -1,8 +1,18 @@
+<?php
 use Laravel\Passport\Passport;
+use Illuminate\Support\ServiceProvider;
 
-public function boot()
+class AuthServiceProvider extends ServiceProvider
 {
-    $this->registerPolicies();
+    public function boot()
+    {
+        $this->registerPolicies();
 
-    Passport::routes();
+        Passport::loadKeysFrom(__DIR__.'/../secrets/oauth');
+    }
+
+    protected function registerPolicies()
+    {
+        // Register any authentication / authorization policies
+    }
 }
