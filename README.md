@@ -3,6 +3,11 @@
 
 This is a comprehensive backend application for a Truck Ordering System built with Laravel. It features a secure API using Laravel Passport for user authentication and an admin dashboard to manage orders and users.
 
+## Demo
+
+[Demo Video](https://drive.google.com/file/d/1x0e_xezE2RNCysMG0wb7pEwlTtX-dauZ/view?usp=drive_link)
+
+
 ## Features
 
 ### 1. Laravel Passport with API
